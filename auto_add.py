@@ -17,6 +17,13 @@ def numToTimecode(minute, second):
 
     return timecode, minute, second
 
+def assemble_timecode(minute, second):
+    timecode_start, minute, second = numToTimecode(minute, second)
+    second += 3
+    timecode_end, minute, second = numToTimecode(minute, second)
+    timecode = timecode_start + ' --> ' + timecode_end
+    return timecode, minute, second
+
 def split_lang(filepath, opt_lang):
     f1 = open(filepath, 'r', encoding='UTF-8', errors='ignore')
     filename_cn = filepath.replace('.txt', '_cn.srt')
@@ -24,41 +31,35 @@ def split_lang(filepath, opt_lang):
     f_cn = open(filename_cn, 'w', encoding='UTF-8')
     f_en = open(filename_en, 'w', encoding='UTF-8')
     if opt_lang == '1':
-        i = 1
-        minute_sum = 0
-        second_sum = 0
+        i_cn = 1
+        minute_cn = 0
+        second_cn = 0
+        i_en = 1
+        minute_en = 0
+        second_en = 0
         for s in f1.readlines():
             s = s.strip()
-            if len(s) > 0 and not '\u4e00' <= s[0] <= '\u9fa5' and not '\u4e00' <= s[-2] <= '\u9fa5' :
-                print('en', s[-1], s)
-                minute, second = minute_sum, second_sum
-                tc_start, minute, second = numToTimecode(minute, second)
-                second += 3
-                tc_end, minute, second = numToTimecode(minute, second)
-                srt_block = str(i) + '\n' + tc_start + ' --> ' + tc_end + '\n' + s + '\n\n'
-                f_en.write(srt_block)
-                i += 1
-                minute_sum = minute
-                second_sum = second
-        f1.close()
-        
-        f1 = open(filepath, 'r', encoding='UTF-8', errors='ignore')
-        i = 1
-        minute_sum = 0
-        second_sum = 0
-        for s in f1.readlines():
-            s = s.strip()
-            if len(s) > 0 and ('\u4e00' <= s[0] <= '\u9fa5' or  '\u4e00' <= s[-2] <= '\u9fa5') :
-                print('cn', s)
-                minute, second = minute_sum, second_sum
-                tc_start, minute, second = numToTimecode(minute, second)
-                second += 3
-                tc_end, minute, second = numToTimecode(minute, second)
-                srt_block = str(i) + '\n' + tc_start + ' --> ' + tc_end + '\n' + s + '\n\n'
-                f_cn.write(srt_block)
-                i += 1
-                minute_sum = minute
-                second_sum = second
+            if len(s) > 0:
+                # check if is english:
+                if not '\u4e00' <= s[0] <= '\u9fa5' and not '\u4e00' <= s[-2] <= '\u9fa5' :
+                    print('en', s[-1], s)
+                    minute, second = minute_en, second_en
+                    timecode, minute, second = assemble_timecode(minute, second)
+                    srt_block = str(i_en) + '\n' + timecode + '\n' + s + '\n\n'
+                    f_en.write(srt_block)
+                    i_en += 1
+                    minute_en = minute
+                    second_en = second
+                # else it's chinese:
+                else:
+                    print('cn', s)
+                    minute, second = minute_cn, second_cn
+                    timecode, minute, second = assemble_timecode(minute, second)
+                    srt_block = str(i_en) + '\n' + timecode + '\n' + s + '\n\n'
+                    f_cn.write(srt_block)
+                    i_cn += 1
+                    minute_cn = minute
+                    second_cn = second
 
     elif opt_lang == '2':
         pass
