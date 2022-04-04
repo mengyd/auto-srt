@@ -1,8 +1,10 @@
 import os
+from load_config import loadConfig
 
 def numToTimecode(minute, second):
-    prefix = '01:'
-    suffix = ',000'
+    params = loadConfig()
+    prefix = params['prefixTC']
+    suffix = params['sufixTC']
     if second > 59:
         minute += 1
         second = 0
@@ -10,21 +12,39 @@ def numToTimecode(minute, second):
     minute_tc = str(minute)
     second_tc = str(second)
     if minute < 10:
-        minute_tc = '0'+minute_tc
+        minute_tc = '0' + minute_tc
     if second < 10:
-        second_tc = '0'+second_tc
+        second_tc = '0' + second_tc
     timecode = prefix + minute_tc + ':' + second_tc + suffix
 
     return timecode, minute, second
 
-def assemble_timecode_string(minute, second):
+def assemble_timecode_string(minute, second, blockLength, blockSpace):
     timecode_start, minute, second = numToTimecode(minute, second)
-    second += 3
+    second += blockLength
     timecode_end, minute, second = numToTimecode(minute, second)
     timecode = timecode_start + ' --> ' + timecode_end
+    second += blockSpace
     return timecode, minute, second
 
 def split_lang(filepath, opt_lang):
+    params = loadConfig()
+    # TODO: Demande for srt creating infos
+    while True:
+        blockLength_str = input("srt字块时长（默认" + params["blockLength"] + "秒）：")
+        if not blockLength_str:
+            blockLength_str = params["blockLength"]
+
+        blockSpace_str = input("srt字块间隔（默认" + params["blockSpace"] + "秒）：")
+        if not blockSpace_str:
+            blockSpace_str = params["blockSpace"]
+
+        if blockLength_str.isnumeric() and blockSpace_str.isnumeric():
+            blockLength = int(blockLength_str)
+            blockSpace = int(blockSpace_str)
+            break
+
+
     f1 = open(filepath, 'r', encoding='UTF-8', errors='ignore')
     filename_cn = filepath.replace('.txt', '_cn.srt')
     filename_en = filepath.replace('.txt', '_en.srt')
@@ -45,7 +65,7 @@ def split_lang(filepath, opt_lang):
                 if not '\u4e00' <= s[0] <= '\u9fa5' and not '\u4e00' <= s[-1] <= '\u9fa5' :
                     print('en', s[-1], s)
                     minute, second = minute_en, second_en
-                    timecode, minute, second = assemble_timecode_string(minute, second)
+                    timecode, minute, second = assemble_timecode_string(minute, second, blockLength, blockSpace)
                     srt_block = str(i_en) + '\n' + timecode + '\n' + s + '\n\n'
                     f_en.write(srt_block)
                     i_en += 1
@@ -55,7 +75,7 @@ def split_lang(filepath, opt_lang):
                 else:
                     print('cn', s)
                     minute, second = minute_cn, second_cn
-                    timecode, minute, second = assemble_timecode_string(minute, second)
+                    timecode, minute, second = assemble_timecode_string(minute, second, blockLength, blockSpace)
                     srt_block = str(i_cn) + '\n' + timecode + '\n' + s + '\n\n'
                     f_cn.write(srt_block)
                     i_cn += 1
@@ -86,5 +106,6 @@ if __name__ == '__main__':
                 first_line = input("首句为哪种语言(cn or en):")
                 if first_line == 'cn' or first_line == 'en':
                     break
+
 
     split_lang(origin_file, opt_lang)
