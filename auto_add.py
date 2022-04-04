@@ -17,7 +17,7 @@ def numToTimecode(minute, second):
 
     return timecode, minute, second
 
-def assemble_timecode(minute, second):
+def assemble_timecode_string(minute, second):
     timecode_start, minute, second = numToTimecode(minute, second)
     second += 3
     timecode_end, minute, second = numToTimecode(minute, second)
@@ -31,6 +31,7 @@ def split_lang(filepath, opt_lang):
     f_cn = open(filename_cn, 'w', encoding='UTF-8')
     f_en = open(filename_en, 'w', encoding='UTF-8')
     if opt_lang == '1':
+        # init indexes
         i_cn = 1
         minute_cn = 0
         second_cn = 0
@@ -41,10 +42,10 @@ def split_lang(filepath, opt_lang):
             s = s.strip()
             if len(s) > 0:
                 # check if is english:
-                if not '\u4e00' <= s[0] <= '\u9fa5' and not '\u4e00' <= s[-2] <= '\u9fa5' :
+                if not '\u4e00' <= s[0] <= '\u9fa5' and not '\u4e00' <= s[-1] <= '\u9fa5' :
                     print('en', s[-1], s)
                     minute, second = minute_en, second_en
-                    timecode, minute, second = assemble_timecode(minute, second)
+                    timecode, minute, second = assemble_timecode_string(minute, second)
                     srt_block = str(i_en) + '\n' + timecode + '\n' + s + '\n\n'
                     f_en.write(srt_block)
                     i_en += 1
@@ -54,13 +55,12 @@ def split_lang(filepath, opt_lang):
                 else:
                     print('cn', s)
                     minute, second = minute_cn, second_cn
-                    timecode, minute, second = assemble_timecode(minute, second)
-                    srt_block = str(i_en) + '\n' + timecode + '\n' + s + '\n\n'
+                    timecode, minute, second = assemble_timecode_string(minute, second)
+                    srt_block = str(i_cn) + '\n' + timecode + '\n' + s + '\n\n'
                     f_cn.write(srt_block)
                     i_cn += 1
                     minute_cn = minute
                     second_cn = second
-
     elif opt_lang == '2':
         pass
 
@@ -82,6 +82,9 @@ if __name__ == '__main__':
             break
 
         if opt_lang == '2':
-            cn_line = input("中文首句在第几行(1 or 2):")
+            while True:
+                first_line = input("首句为哪种语言(cn or en):")
+                if first_line == 'cn' or first_line == 'en':
+                    break
 
     split_lang(origin_file, opt_lang)
