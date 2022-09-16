@@ -1,5 +1,28 @@
 import os
+import re
 from load_config import loadConfig
+
+def auto_correction(phrase, illegalEnds, corrctionslist, corrections):
+    phrase = phrase.strip().capitalize()
+    while "  " in phrase:
+        phrase = phrase.replace("  ", " ")
+
+    for char in illegalEnds:
+        if phrase.endswith(char):
+            phrase = phrase.rstrip(char)
+
+    for item in corrctionslist:
+        if item in phrase:
+            phrase = phrase.replace(item, corrections[item])
+            print("find '" + item + "', replaced by " + corrections[item])
+    return phrase
+
+def contain_zh(phrase):
+    zh_pattern = re.compile(u'[\u4e00-\u9fa5]+')
+    phrase_bytes = bytes(phrase, 'utf-8')
+    phrase_bytes = phrase_bytes.decode()
+    match = zh_pattern.search(phrase_bytes)
+    return match
 
 def numToTimecode(minute, second):
     params = loadConfig()
@@ -61,19 +84,10 @@ def split_lang(filepath, opt_lang):
         for s in f1.readlines():
             s = s.strip()
             if len(s) > 0:
-                # check if is english:
-                if not '\u4e00' <= s[0] <= '\u9fa5' and not '\u4e00' <= s[-1] <= '\u9fa5' :
-                    print('en', s[-1], s)
-                    minute, second = minute_en, second_en
-                    timecode, minute, second = assemble_timecode_string(minute, second, blockLength, blockSpace)
-                    srt_block = str(i_en) + '\n' + timecode + '\n' + s + '\n\n'
-                    f_en.write(srt_block)
-                    i_en += 1
-                    minute_en = minute
-                    second_en = second
-                # else it's chinese:
-                else:
+                # check if is chinese:
+                if contain_zh(s) :
                     print('cn', s)
+                    s = auto_correction(s, params["illegalEnds"], params["correctionList_cn"], params["corrections_cn"])
                     minute, second = minute_cn, second_cn
                     timecode, minute, second = assemble_timecode_string(minute, second, blockLength, blockSpace)
                     srt_block = str(i_cn) + '\n' + timecode + '\n' + s + '\n\n'
@@ -81,6 +95,18 @@ def split_lang(filepath, opt_lang):
                     i_cn += 1
                     minute_cn = minute
                     second_cn = second
+                # else it's english:
+                else:
+                    print('en', s[-1], s)
+                    s = auto_correction(s, params["illegalEnds"], params["correctionList_en"], params["corrections_en"])
+                    minute, second = minute_en, second_en
+                    timecode, minute, second = assemble_timecode_string(minute, second, blockLength, blockSpace)
+                    srt_block = str(i_en) + '\n' + timecode + '\n' + s + '\n\n'
+                    f_en.write(srt_block)
+                    i_en += 1
+                    minute_en = minute
+                    second_en = second
+
     elif opt_lang == '2':
         pass
 
@@ -96,16 +122,17 @@ if __name__ == '__main__':
         if origin_file and os.path.exists(origin_file):
             break
     
-    while True:
-        opt_lang = input("语言分割类型(1-auto, 2-line):")
-        if opt_lang == '1':
-            break
+    # while True:
+    #     opt_lang = input("语言分割类型(1-auto, 2-line):")
+    #     if opt_lang == '1':
+    #         break
 
-        if opt_lang == '2':
-            while True:
-                first_line = input("首句为哪种语言(cn or en):")
-                if first_line == 'cn' or first_line == 'en':
-                    break
+    #     if opt_lang == '2':
+    #         while True:
+    #             first_line = input("首句为哪种语言(cn or en):")
+    #             if first_line == 'cn' or first_line == 'en':
+    #                 break
+    opt_lang = '1'
 
 
     split_lang(origin_file, opt_lang)
