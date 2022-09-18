@@ -17,6 +17,67 @@ def auto_correction(phrase, illegalEnds, corrctionslist, corrections):
             print("find '" + item + "', replaced by " + corrections[item])
     return phrase
 
+# TODO: Split unfinished
+def split(illegalEnds, wordsNumberLimit, phrases, f_temp):
+    for phrase in phrases:
+        index = 0
+        splitOk = True
+        deletelist = []
+        for char in illegalEnds:
+            if char in phrase and not phrase.endswith(char) and not char == ' ':
+                splitOk = False
+                splitedPhrases = phrase.split(char)
+                # indexInsert = phrases.index(phrase)
+                deletelist.append(phrase)
+                for newPhrase in splitedPhrases:
+                    print(newPhrase)
+                    f_temp.write(newPhrase+'\n')
+                    # phrases.insert(indexInsert, newPhrase)
+                    # indexInsert += 1
+                    # index = indexInsert
+                print("remove " + phrase)
+                # phrases.pop(index)
+        if not phrase in deletelist:
+            f_temp.write(phrase+'\n')
+
+# TODO: Split unfinished
+def split_phrase(illegalEnds, wordsNumberLimit, filepath):
+    filepath_temp = filepath.replace('.txt', '_temp.txt')
+    f_origin = open(filepath, 'r', encoding='UTF-8', errors='ignore')
+    f_temp = open(filepath_temp, 'w', encoding='UTF-8')
+
+    limit = int(wordsNumberLimit)
+    string = f_origin.read()
+    phrases = string.split("\n")
+    splitOk = False
+    deletelist = []
+    # while not splitOk: 
+    for phrase in phrases:
+        index = 0
+        splitOk = True
+        for char in illegalEnds:
+            if char in phrase and not phrase.endswith(char) and not char == ' ':
+                splitOk = False
+                splitedPhrases = phrase.split(char)
+                # indexInsert = phrases.index(phrase)
+                deletelist.append(phrase)
+                for newPhrase in splitedPhrases:
+                    print(newPhrase)
+                    f_temp.write(newPhrase+'\n')
+                    # phrases.insert(indexInsert, newPhrase)
+                    # indexInsert += 1
+                    # index = indexInsert
+                print("remove " + phrase)
+                # phrases.pop(index)
+        if not phrase in deletelist:
+            f_temp.write(phrase+'\n')
+    for phrase in phrases:
+        f_temp.write(phrase+'\n')
+
+    f_temp.close()
+    f_origin.close()
+
+
 def contain_zh(phrase):
     zh_pattern = re.compile(u'[\u4e00-\u9fa5]+')
     phrase_bytes = bytes(phrase, 'utf-8')
@@ -62,10 +123,23 @@ def split_lang(filepath, opt_lang):
         if not blockSpace_str:
             blockSpace_str = params["blockSpace"]
 
+        doSplitAnwser = input("是否分割标点和长句(y-yes, n-no):")
+        if doSplitAnwser == "y":
+            doSplit = True
+        if doSplitAnwser == "n":
+            doSplit = False
+        if not doSplitAnwser:
+            doSplit = True
+
         if blockLength_str.isnumeric() and blockSpace_str.isnumeric():
             blockLength = int(blockLength_str)
             blockSpace = int(blockSpace_str)
             break
+
+    if doSplit:
+        split_phrase(params["illegalEnds"], params["wordsNumberLimit"], filepath)
+        filepath = filepath.replace('.txt', '_temp.txt')
+        
 
 
     f1 = open(filepath, 'r', encoding='UTF-8', errors='ignore')
