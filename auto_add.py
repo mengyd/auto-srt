@@ -17,62 +17,27 @@ def auto_correction(phrase, illegalEnds, corrctionslist, corrections):
             print("find '" + item + "', replaced by " + corrections[item])
     return phrase
 
-# TODO: Split unfinished
-def split(illegalEnds, wordsNumberLimit, phrases, f_temp):
-    for phrase in phrases:
-        index = 0
-        splitOk = True
-        deletelist = []
-        for char in illegalEnds:
-            if char in phrase and not phrase.endswith(char) and not char == ' ':
-                splitOk = False
-                splitedPhrases = phrase.split(char)
-                # indexInsert = phrases.index(phrase)
-                deletelist.append(phrase)
-                for newPhrase in splitedPhrases:
-                    print(newPhrase)
-                    f_temp.write(newPhrase+'\n')
-                    # phrases.insert(indexInsert, newPhrase)
-                    # indexInsert += 1
-                    # index = indexInsert
-                print("remove " + phrase)
-                # phrases.pop(index)
-        if not phrase in deletelist:
-            f_temp.write(phrase+'\n')
+def split(illegalEnds, phrase, newPhrase=''):
+    if any(x in phrase for x in illegalEnds):
+        for char in phrase:
+            if char in illegalEnds and not phrase.endswith(char):
+                splitedPhrases = phrase.split(char, 1)
+                if len(splitedPhrases) > 1:
+                    newPhrase = splitedPhrases[0]
+                    print("new Phrase: ", newPhrase)
+                    return newPhrase + '\n' + split(illegalEnds, splitedPhrases[1])
+    return phrase
 
-# TODO: Split unfinished
-def split_phrase(illegalEnds, wordsNumberLimit, filepath):
+def split_phrase(illegalEnds, filepath):
     filepath_temp = filepath.replace('.txt', '_temp.txt')
     f_origin = open(filepath, 'r', encoding='UTF-8', errors='ignore')
     f_temp = open(filepath_temp, 'w', encoding='UTF-8')
 
-    limit = int(wordsNumberLimit)
     string = f_origin.read()
     phrases = string.split("\n")
-    splitOk = False
-    deletelist = []
     # while not splitOk: 
     for phrase in phrases:
-        index = 0
-        splitOk = True
-        for char in illegalEnds:
-            if char in phrase and not phrase.endswith(char) and not char == ' ':
-                splitOk = False
-                splitedPhrases = phrase.split(char)
-                # indexInsert = phrases.index(phrase)
-                deletelist.append(phrase)
-                for newPhrase in splitedPhrases:
-                    print(newPhrase)
-                    f_temp.write(newPhrase+'\n')
-                    # phrases.insert(indexInsert, newPhrase)
-                    # indexInsert += 1
-                    # index = indexInsert
-                print("remove " + phrase)
-                # phrases.pop(index)
-        if not phrase in deletelist:
-            f_temp.write(phrase+'\n')
-    for phrase in phrases:
-        f_temp.write(phrase+'\n')
+        f_temp.write(split(illegalEnds, phrase)+'\n')
 
     f_temp.close()
     f_origin.close()
@@ -113,7 +78,7 @@ def assemble_timecode_string(minute, second, blockLength, blockSpace):
 
 def split_lang(filepath, opt_lang):
     params = loadConfig()
-    # TODO: Demande for srt creating infos
+    # Demande for srt creating infos
     while True:
         blockLength_str = input("srt字块时长（默认" + params["blockLength"] + "秒）：")
         if not blockLength_str:
@@ -137,14 +102,16 @@ def split_lang(filepath, opt_lang):
             break
 
     if doSplit:
-        split_phrase(params["illegalEnds"], params["wordsNumberLimit"], filepath)
-        filepath = filepath.replace('.txt', '_temp.txt')
+        split_phrase(params["illegalEnds"], filepath)
+        filepath = filepath.replace('.txt', '_temp.txt')   
+        filename_cn = filepath.replace('_temp.txt', '_cn.srt')
+        filename_en = filepath.replace('_temp.txt', '_en.srt')
+    else:
+        filename_cn = filepath.replace('.txt', '_cn.srt')
+        filename_en = filepath.replace('.txt', '_en.srt')
         
 
-
     f1 = open(filepath, 'r', encoding='UTF-8', errors='ignore')
-    filename_cn = filepath.replace('.txt', '_cn.srt')
-    filename_en = filepath.replace('.txt', '_en.srt')
     f_cn = open(filename_cn, 'w', encoding='UTF-8')
     f_en = open(filename_en, 'w', encoding='UTF-8')
     if opt_lang == '1':
@@ -187,6 +154,10 @@ def split_lang(filepath, opt_lang):
     f1.close()
     f_cn.close()
     f_en.close()
+
+    # Delete f_temp
+    if doSplit and os.path.exists(filepath):
+        os.remove(filepath)
 
 
 if __name__ == '__main__':

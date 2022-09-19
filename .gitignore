@@ -1,3 +1,4 @@
 *.txt
 *.srt
 /__pycache__
+/env
