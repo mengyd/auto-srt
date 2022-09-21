@@ -3,7 +3,10 @@ import re
 from load_config import loadConfig
 
 def auto_correction(phrase, illegalEnds, corrctionslist, corrections):
-    phrase = phrase.strip().capitalize()
+    phrase = phrase.strip()
+    if len(phrase) > 0:
+        phrase = phrase[0].upper() + phrase[1:]
+        
     while "  " in phrase:
         phrase = phrase.replace("  ", " ")
 
