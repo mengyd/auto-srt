@@ -133,6 +133,9 @@ def split_lang(filepath, opt_lang):
                     print('cn', s)
                     s = auto_correction(s, params["illegalEnds"], params["correctionList_cn"], params["corrections_cn"])
                     minute, second = minute_cn, second_cn
+                    blockLength = int(len(s)//3)
+                    if blockLength == 0:
+                        blockLength = 1
                     timecode, minute, second = assemble_timecode_string(minute, second, blockLength, blockSpace)
                     srt_block = str(i_cn) + '\n' + timecode + '\n' + s + '\n\n'
                     f_cn.write(srt_block)
@@ -143,8 +146,11 @@ def split_lang(filepath, opt_lang):
                 else:
                     print('en', s[-1], s)
                     if doSplit:
-                        s = auto_correction(s, params["illegalEnds"], params["correctionList_en"], params["corrections_en"])
+                        s = auto_correction(s, params["illegalEnds"], params["correctionList_en"], params["corrections_en"])               
                     minute, second = minute_en, second_en
+                    blockLength = int(len(s.split(" "))//2.5)
+                    if blockLength == 0:
+                        blockLength = 1
                     timecode, minute, second = assemble_timecode_string(minute, second, blockLength, blockSpace)
                     srt_block = str(i_en) + '\n' + timecode + '\n' + s + '\n\n'
                     f_en.write(srt_block)
