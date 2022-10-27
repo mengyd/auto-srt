@@ -142,7 +142,8 @@ def split_lang(filepath, opt_lang):
                 # else it's english:
                 else:
                     print('en', s[-1], s)
-                    s = auto_correction(s, params["illegalEnds"], params["correctionList_en"], params["corrections_en"])
+                    if doSplit:
+                        s = auto_correction(s, params["illegalEnds"], params["correctionList_en"], params["corrections_en"])
                     minute, second = minute_en, second_en
                     timecode, minute, second = assemble_timecode_string(minute, second, blockLength, blockSpace)
                     srt_block = str(i_en) + '\n' + timecode + '\n' + s + '\n\n'

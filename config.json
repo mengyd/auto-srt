@@ -3,15 +3,18 @@
     "blockSpace": "0",
     "prefixTC": "01:",
     "sufixTC": ",000",
-    "illegalEnds": [",",".","!","?","。","，","！","？","?"],
+    "illegalEnds": [",",".","!","?","。","，","！","？","?",":","："],
     "correctionList_en": ["，","。"],
     "corrections_en": {
         "，": ",",
         "。": "."
     },
-    "correctionList_cn": [",","."],
+    "correctionList_cn": ["，","。","、","；"],
     "corrections_cn": {
-        ",": "，",
-        ".": "。"
+        "，": " ",
+        "。": " ",
+        "、": " ",
+        "：": " ",
+        "；": " "
     }
 }
