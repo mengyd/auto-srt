@@ -73,6 +73,8 @@ def numToTimecode(minute, second):
 
 def assemble_timecode_string(minute, second, blockLength, blockSpace):
     timecode_start, minute, second = numToTimecode(minute, second)
+    if blockLength == 0:
+        blockLength = 1
     second += blockLength
     timecode_end, minute, second = numToTimecode(minute, second)
     timecode = timecode_start + ' --> ' + timecode_end
@@ -83,9 +85,6 @@ def split_lang(filepath, opt_lang):
     params = loadConfig()
     # Demande for srt creating infos
     while True:
-        blockLength_str = input("srt字块时长（默认" + params["blockLength"] + "秒）：")
-        if not blockLength_str:
-            blockLength_str = params["blockLength"]
 
         blockSpace_str = input("srt字块间隔（默认" + params["blockSpace"] + "秒）：")
         if not blockSpace_str:
@@ -99,8 +98,7 @@ def split_lang(filepath, opt_lang):
         if not doSplitAnwser:
             doSplit = True
 
-        if blockLength_str.isnumeric() and blockSpace_str.isnumeric():
-            blockLength = int(blockLength_str)
+        if blockSpace_str.isnumeric():
             blockSpace = int(blockSpace_str)
             break
 
@@ -133,9 +131,7 @@ def split_lang(filepath, opt_lang):
                     print('cn', s)
                     s = auto_correction(s, params["illegalEnds"], params["correctionList_cn"], params["corrections_cn"])
                     minute, second = minute_cn, second_cn
-                    blockLength = int(len(s)//3)
-                    if blockLength == 0:
-                        blockLength = 1
+                    blockLength = int(len(s)//params["langSpeed_cn"])
                     timecode, minute, second = assemble_timecode_string(minute, second, blockLength, blockSpace)
                     srt_block = str(i_cn) + '\n' + timecode + '\n' + s + '\n\n'
                     f_cn.write(srt_block)
@@ -148,9 +144,7 @@ def split_lang(filepath, opt_lang):
                     if doSplit:
                         s = auto_correction(s, params["illegalEnds"], params["correctionList_en"], params["corrections_en"])               
                     minute, second = minute_en, second_en
-                    blockLength = int(len(s.split(" "))//2.5)
-                    if blockLength == 0:
-                        blockLength = 1
+                    blockLength = int(len(s.split(" "))//params["langSpeed_en"])
                     timecode, minute, second = assemble_timecode_string(minute, second, blockLength, blockSpace)
                     srt_block = str(i_en) + '\n' + timecode + '\n' + s + '\n\n'
                     f_en.write(srt_block)
